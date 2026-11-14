@@ -132,7 +132,8 @@ Build with JDK 21 and Android SDK platform 37.0:
 ./gradlew :app:assembleVanillaRelease
 ```
 
-The `vanillaRelease` APK is published after signing with the permanent store key.
+The `vanillaRelease` APK is signed with the permanent store key and published
+alongside the launcher in [Omodash releases](https://github.com/solobot2/omodash-updates/releases).
 The SHA-256 certificate digest in Omodash is independent of the release feed.
 The two apps exchange the embedded surface and read-only APK descriptors over
 Binder after checking their peer's signing certificate. The wire messages are
