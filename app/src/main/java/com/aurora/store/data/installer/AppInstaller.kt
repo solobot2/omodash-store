@@ -40,6 +40,7 @@ import com.aurora.store.data.installer.ShizukuInstaller.Companion.SHIZUKU_PACKAG
 import com.aurora.store.data.installer.base.IInstaller
 import com.aurora.store.data.model.Installer
 import com.aurora.store.data.model.InstallerInfo
+import com.aurora.store.omodash.OmodashInstaller
 import com.aurora.store.util.PackageUtil
 import com.aurora.store.util.PackageUtil.hasMicroGCompanion
 import com.aurora.store.util.Preferences
@@ -60,7 +61,8 @@ class AppInstaller @Inject constructor(
     private val serviceInstaller: ServiceInstaller,
     private val amInstaller: AMInstaller,
     private val shizukuInstaller: ShizukuInstaller,
-    private val microGInstaller: MicroGInstaller
+    private val microGInstaller: MicroGInstaller,
+    private val omodashInstaller: OmodashInstaller
 ) {
 
     companion object {
@@ -204,52 +206,9 @@ class AppInstaller @Inject constructor(
         }
     }
 
-    private val defaultInstaller: IInstaller
-        get() = sessionInstaller
 
     fun getMicroGInstaller(): IInstaller = microGInstaller
 
-    /**
-     * Returns the installer for the user's chosen mode, transparently falling back to the
-     * default (session) installer when that mode is currently unavailable, e.g. the chosen
-     * Shizuku installer when Shizuku is disabled.
-     * @param notifyOnFallback Whether to inform the user via a toast when a fallback happens
-     */
-    fun getPreferredInstaller(notifyOnFallback: Boolean = false): IInstaller {
-        val selected = getCurrentInstaller(context)
-        val installer = when (selected) {
-            Installer.SESSION -> sessionInstaller
-
-            Installer.NATIVE -> nativeInstaller
-
-            Installer.ROOT -> if (hasRootAccess()) rootInstaller else defaultInstaller
-
-            Installer.SERVICE -> if (hasAuroraService(context)) {
-                serviceInstaller
-            } else {
-                defaultInstaller
-            }
-
-            Installer.AM -> if (hasAppManager(context)) amInstaller else defaultInstaller
-
-            Installer.SHIZUKU -> if (hasShizukuOrSui(context) && hasShizukuPerm()) {
-                shizukuInstaller
-            } else {
-                defaultInstaller
-            }
-
-            Installer.MICROG -> if (hasMicroGCompanion(context)) {
-                microGInstaller
-            } else {
-                defaultInstaller
-            }
-        }
-
-        if (selected != Installer.SESSION && installer === defaultInstaller) {
-            Log.i(TAG, "$selected installer unavailable, falling back to session installer")
-            if (notifyOnFallback) context.toast(R.string.installer_fallback_session)
-        }
-
-        return installer
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun getPreferredInstaller(notifyOnFallback: Boolean = false): IInstaller = omodashInstaller
 }

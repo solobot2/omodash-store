@@ -26,7 +26,6 @@ import com.aurora.extensions.isOAndAbove
 import com.aurora.extensions.isPAndAbove
 import com.aurora.extensions.isQAndAbove
 import com.aurora.extensions.isSAndAbove
-import com.aurora.extensions.requiresObbDir
 import com.aurora.gplayapi.data.models.PlayFile
 import com.aurora.gplayapi.helpers.AuthHelper
 import com.aurora.gplayapi.helpers.PurchaseHelper
@@ -171,38 +170,15 @@ class DownloadWorker @AssistedInject constructor(
         // Bail out if file list is empty after purchase
         if (download.fileList.isEmpty()) return onFailure(NothingToDownloadException())
 
-        // Create dirs & generate download request for files and shared libs (if any)
-        PathUtil.getAppDownloadDir(context, download.packageName, download.versionCode).mkdirs()
+        if (download.sharedLibs.isNotEmpty() || download.fileList.any {
+                it.type != PlayFile.Type.BASE && it.type != PlayFile.Type.SPLIT
+            }) return onFailure(IllegalStateException(context.getString(R.string.omodash_unsupported_package)))
 
-        // Create OBB dir if required
-        if (download.fileList.requiresObbDir()) {
-            PathUtil.getObbDownloadDir(download.packageName).mkdirs()
-        }
+        PathUtil.getAppDownloadDir(context, download.packageName, download.versionCode).mkdirs()
 
         val files = mutableListOf<PlayFile>()
 
         // Check if shared libs are present, if yes, handle them first
-        if (download.sharedLibs.isNotEmpty()) {
-            try {
-                download.sharedLibs.forEach {
-                    // Create shared lib download dir
-                    PathUtil.getLibDownloadDir(
-                        context,
-                        download.packageName,
-                        download.versionCode,
-                        it.packageName
-                    ).mkdirs()
-
-                    // Purchase shared lib if file list is empty
-                    it.fileList = it.fileList.ifEmpty {
-                        purchase(it.packageName, it.versionCode, 0)
-                    }
-                    files.addAll(it.fileList)
-                }
-            } catch (exception: Exception) {
-                return onFailure(exception)
-            }
-        }
         files.addAll(download.fileList)
 
         // Update data for notification

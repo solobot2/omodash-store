@@ -58,16 +58,16 @@ configure<ApplicationExtension> {
     }
 
     defaultConfig {
-        applicationId = "com.aurora.store"
+        applicationId = "win.solobot.omodash.store"
         minSdk {
-            version = release(23)
+            version = release(30)
         }
         targetSdk {
             version = release(37)
         }
 
-        versionCode = 76
-        versionName = "4.8.4"
+        versionCode = providers.gradleProperty("storeVersionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("storeVersionName").orNull ?: "1.0.0"
 
         testInstrumentationRunner = "com.aurora.store.HiltInstrumentationTestRunner"
         testInstrumentationRunnerArguments["disableAnalytics"] = "true"

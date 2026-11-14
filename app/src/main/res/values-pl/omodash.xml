@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<resources>
+    <string name="omodash_host_unavailable">Nie udało się połączyć z Omodash.</string>
+    <string name="omodash_unsupported_package">Ta aplikacja wymaga dodatkowych pakietów lub danych gry.</string>
+    <string name="omodash_anonymous_sign_in">Zaloguj się anonimowo</string>
+    <string name="omodash_search_error">Nie udało się wyszukać aplikacji.</string>
+    <string name="omodash_details_error">Nie udało się wczytać szczegółów aplikacji.</string>
+    <string name="omodash_search_prompt">Wpisz nazwę aplikacji w polu wyszukiwania.</string>
+    <string name="omodash_no_results">Nie znaleziono aplikacji.</string>
+</resources>

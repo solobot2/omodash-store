@@ -116,3 +116,26 @@ Aurora Store is based on these projects
 - [AppCrawler](https://github.com/Akdeniz/google-play-crawler)
 - [Raccoon](https://github.com/onyxbits/raccoon4)
 - [SAI](https://github.com/Aefyr/SAI)
+
+## Omodash Store
+
+This fork of Aurora Store 4.8.4 (`ad3d349edce82e119ba239f3a07b3afe028abd19`)
+provides an embedded store for Omodash on Android 11 and later. Find it under
+**Apps → Store** in Omodash. It uses Aurora's anonymous session and download
+pipeline. Omodash owns package installation via Android PackageInstaller.
+
+Build with JDK 21 and Android SDK platform 37.0:
+
+```sh
+./gradlew :app:assembleVanillaRelease
+```
+
+The `vanillaRelease` APK is published after signing with the permanent store key.
+The SHA-256 certificate digest in Omodash is independent of the release feed.
+The two apps exchange the embedded surface and read-only APK descriptors over
+Binder after checking their peer's signing certificate. The wire messages are
+versioned in `StoreBridge.kt`. The catalog supports ordinary APKs and split APKs
+for a single package. OBB and separate dependency packages are unsupported.
+
+Source at each release tag is the corresponding source for its APK. Original
+Aurora OSS, Calyx Institute and other upstream notices remain with the sources.

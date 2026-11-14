@@ -77,26 +77,22 @@ class DownloadHelper @Inject constructor(
         AuroraApp.scope.launch {
             val downloads = downloadDao.downloads().firstOrNull() ?: emptyList()
             cancelFailedDownloads(downloads)
-            finalizeStaleSelfUpdate(downloads)
+            reconcileInterruptedInstalls(downloads)
         }.invokeOnCompletion {
             observeDownloads()
             observeInstalls()
         }
     }
 
-    /**
-     * Finalizes a self-update download left dangling in [DownloadStatus.INSTALLING]. Replacing
-     * the app's own APK kills the process before the installer's "installed" event can advance
-     * the row, so on the next launch it would otherwise show as installing forever. Reaching
-     * INSTALLING means the install was already committed, so mark it installed; if it actually
-     * failed, the periodic update check re-offers and re-enqueues it.
-     */
-    private suspend fun finalizeStaleSelfUpdate(downloads: List<Download>) {
-        downloads.firstOrNull {
-            it.packageName == context.packageName && it.status == DownloadStatus.INSTALLING
-        }?.let {
-            Log.i(TAG, "Finalizing stale self-update install for ${it.packageName}")
-            downloadDao.updateStatus(it.packageName, DownloadStatus.INSTALLED)
+    private suspend fun reconcileInterruptedInstalls(downloads: List<Download>) {
+        for (download in downloads.filter { it.status == DownloadStatus.INSTALLING }) {
+            val installedVersion = try {
+                context.packageManager.getPackageInfo(download.packageName, 0).longVersionCode
+            } catch (_: android.content.pm.PackageManager.NameNotFoundException) {
+                0L
+            }
+            downloadDao.updateStatus(download.packageName, if (installedVersion >= download.versionCode)
+                DownloadStatus.INSTALLED else DownloadStatus.FAILED)
         }
     }
 

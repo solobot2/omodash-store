@@ -36,7 +36,6 @@ import com.aurora.extensions.isPAndAbove
 import com.aurora.extensions.setAppTheme
 import com.aurora.store.data.event.EventFlow
 import com.aurora.store.data.helper.DownloadHelper
-import com.aurora.store.data.helper.UpdateHelper
 import com.aurora.store.data.receiver.PackageManagerReceiver
 import com.aurora.store.util.CommonUtil
 import com.aurora.store.util.NotificationUtil
@@ -60,9 +59,6 @@ class AuroraApp : Application(), Configuration.Provider, SingletonImageLoader.Fa
 
     @Inject
     lateinit var downloadHelper: DownloadHelper
-
-    @Inject
-    lateinit var updateHelper: UpdateHelper
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -101,7 +97,7 @@ class AuroraApp : Application(), Configuration.Provider, SingletonImageLoader.Fa
 
         // Initialize Download and Update helpers to observe and trigger downloads
         downloadHelper.init()
-        updateHelper.init()
+        // Store updates are supplied by Omodash. Catalog installs are initiated from the embedded UI.
 
         // Register broadcast receiver for package install/uninstall
         ContextCompat.registerReceiver(
