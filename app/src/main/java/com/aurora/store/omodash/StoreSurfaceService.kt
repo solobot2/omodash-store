@@ -15,7 +15,6 @@ import android.os.Message
 import android.os.Messenger
 import android.view.ContextThemeWrapper
 import android.view.SurfaceControlViewHost
-import android.view.WindowManager
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
@@ -83,15 +82,16 @@ internal class StoreSurfaceService : Service() {
         val localized = if (language.isBlank()) displayContext else displayContext.createConfigurationContext(
             Configuration(displayContext.resources.configuration).apply { setLocale(java.util.Locale.forLanguageTag(language)) }
         )
-        val window = localized.createWindowContext(WindowManager.LayoutParams.TYPE_APPLICATION, null)
+        // Android 11's WindowContext asks WindowManager for a privileged application token.
+        // SurfaceControlViewHost already carries the host input token.
         val owner = StoreViewOwner()
-        val view = ComposeView(ContextThemeWrapper(window, com.aurora.store.R.style.AppTheme)).apply {
+        val view = ComposeView(ContextThemeWrapper(localized, com.aurora.store.R.style.AppTheme)).apply {
             setViewTreeLifecycleOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setContent { EmbeddedStore(catalog, theme, ::requestGoogleLogin) }
         }
-        val host = SurfaceControlViewHost(window, display, token)
+        val host = SurfaceControlViewHost(localized, display, token)
         val death = IBinder.DeathRecipient { handler.post { if (session?.reply?.binder == reply.binder) close() } }
         session = Session(host, view, owner, reply, message.arg2, death)
         reply.binder.linkToDeath(death, 0)
