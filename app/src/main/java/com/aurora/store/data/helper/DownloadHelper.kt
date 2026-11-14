@@ -13,11 +13,15 @@ import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import com.aurora.extensions.TAG
 import com.aurora.gplayapi.data.models.App
+import com.aurora.gplayapi.helpers.AppDetailsHelper
+import com.aurora.gplayapi.network.IHttpClient
 import com.aurora.store.AuroraApp
+import com.aurora.store.R
 import com.aurora.store.data.AccountRepository
 import com.aurora.store.data.event.InstallerEvent
 import com.aurora.store.data.installer.AppInstaller
 import com.aurora.store.data.model.DownloadStatus
+import com.aurora.store.data.providers.AuthProvider
 import com.aurora.store.data.room.download.Download
 import com.aurora.store.data.room.download.DownloadDao
 import com.aurora.store.data.room.suite.ExternalApk
@@ -42,7 +46,9 @@ class DownloadHelper @Inject constructor(
     @ApplicationContext private val context: Context,
     private val downloadDao: DownloadDao,
     private val appInstaller: AppInstaller,
-    private val accountRepository: AccountRepository
+    private val accountRepository: AccountRepository,
+    private val authProvider: AuthProvider,
+    private val httpClient: IHttpClient
 ) {
 
     companion object {
@@ -237,6 +243,18 @@ class DownloadHelper @Inject constructor(
             return
         }
         Log.i(TAG, "Retrying download for $packageName")
+        // Older embedded Store versions could queue a search result without Play version metadata.
+        if (existing.versionCode <= 0 && existing.fileList.isEmpty()) {
+            val accountId = accountRepository.resolveAccountId(packageName)
+            val session = authProvider.getAuthData(accountId) ?: authProvider.refresh(accountId).getOrThrow()
+            val app = AppDetailsHelper(session).using(httpClient).getAppByPackageName(packageName)
+            check(app.packageName == packageName && app.versionCode > 0) {
+                context.getString(R.string.omodash_no_install_version)
+            }
+            if (getDownload(packageName)?.isActive != false) return
+            enqueueApp(app.copy(isInstalled = existing.isInstalled))
+            return
+        }
         downloadDao.updateStatus(packageName, DownloadStatus.QUEUED)
     }
 

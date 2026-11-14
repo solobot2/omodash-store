@@ -6,6 +6,7 @@
     <string name="omodash_anonymous_sign_in">Zaloguj się anonimowo</string>
     <string name="omodash_search_error">Nie udało się wyszukać aplikacji.</string>
     <string name="omodash_details_error">Nie udało się wczytać szczegółów aplikacji.</string>
+    <string name="omodash_no_install_version">Google Play nie podał wersji do zainstalowania.</string>
     <string name="omodash_search_prompt">Wpisz nazwę aplikacji w polu wyszukiwania.</string>
     <string name="omodash_no_results">Nie znaleziono aplikacji.</string>
     <string name="omodash_google_sign_in">Zaloguj się przez Google</string>

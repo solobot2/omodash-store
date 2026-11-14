@@ -15,6 +15,7 @@ import com.aurora.store.data.helper.DownloadHelper
 import com.aurora.store.util.NotificationUtil
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -33,11 +34,18 @@ class DownloadRetryReceiver : BroadcastReceiver() {
 
         if (packageName.isNotBlank()) {
             Log.d(TAG, "Received retry request for $packageName")
-            // Clear the failure notification immediately for responsive feedback; the
-            // download worker re-posts progress once it runs.
-            NotificationUtil.clearAppNotification(context, packageName)
+            val pending = goAsync()
             AuroraApp.scope.launch(Dispatchers.IO) {
-                downloadHelper.retryDownload(packageName)
+                try {
+                    downloadHelper.retryDownload(packageName)
+                    NotificationUtil.clearAppNotification(context, packageName)
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Exception) {
+                    Log.w(TAG, "Could not retry $packageName (${error.javaClass.simpleName})")
+                } finally {
+                    pending.finish()
+                }
             }
         }
     }

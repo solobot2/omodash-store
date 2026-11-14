@@ -161,6 +161,7 @@ class DownloadWorker @AssistedInject constructor(
         notifyStatus(DownloadStatus.PURCHASING)
         try {
             download.fileList = download.fileList.ifEmpty {
+                check(download.versionCode > 0) { context.getString(R.string.omodash_no_install_version) }
                 purchase(download.packageName, download.versionCode, download.offerType)
             }
         } catch (exception: Exception) {

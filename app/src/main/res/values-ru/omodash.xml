@@ -6,6 +6,7 @@
     <string name="omodash_anonymous_sign_in">Войти анонимно</string>
     <string name="omodash_search_error">Не удалось выполнить поиск.</string>
     <string name="omodash_details_error">Не удалось загрузить сведения о приложении.</string>
+    <string name="omodash_no_install_version">Google Play не предоставил версию для установки.</string>
     <string name="omodash_search_prompt">Введите название приложения в строке поиска.</string>
     <string name="omodash_no_results">Приложения не найдены.</string>
     <string name="omodash_google_sign_in">Войти через Google</string>

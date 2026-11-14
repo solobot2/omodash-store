@@ -36,12 +36,16 @@ internal class EmbeddedCatalog @Inject constructor(
     private val http: IHttpClient,
     private val downloadHelper: DownloadHelper
 ) {
+    // GPlayApi compares App instances by package name. Track the transition from a search
+    // result to Play's resolved details explicitly so StateFlow still delivers it.
+    data class Detail(val app: App, val resolved: Boolean = false)
+
     data class State(
         val signedIn: Boolean = false,
         val busy: Boolean = false,
         val query: String = "",
         val results: List<App> = emptyList(),
-        val detail: App? = null,
+        val detail: Detail? = null,
         val showingDownloads: Boolean = false,
         val error: Int? = null
     )
@@ -95,15 +99,18 @@ internal class EmbeddedCatalog @Inject constructor(
         .flatMap { it.clusterAppList }.distinctBy { it.packageName }
 
     fun details(app: App) {
-        state.value = state.value.copy(detail = app, showingDownloads = false)
+        state.value = state.value.copy(detail = Detail(app), showingDownloads = false)
         run(R.string.omodash_details_error) {
             val detail = AppDetailsHelper(requireNotNull(auth.authData)).using(http).getAppByPackageName(app.packageName)
+            check(detail.packageName == app.packageName)
             ensureActive()
-            state.value = state.value.copy(detail = detail)
+            state.value = state.value.copy(detail = Detail(detail, resolved = true))
         }
     }
 
-    fun install(app: App) {
+    fun install(detail: Detail) {
+        val app = detail.app
+        if (state.value.detail !== detail || !detail.resolved || app.versionCode <= 0) return
         if (app.dependencies.dependentLibraries.isNotEmpty() || app.fileList.any {
                 it.type == PlayFile.Type.OBB || it.type == PlayFile.Type.PATCH
             }) {

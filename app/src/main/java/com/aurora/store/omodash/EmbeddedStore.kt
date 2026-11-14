@@ -89,7 +89,7 @@ internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>, o
                             Text(stringResource(R.string.action_filter_downloads))
                         }
                     }
-                    val app = state.detail
+                    val detail = state.detail
                     when {
                         state.showingDownloads -> LazyColumn {
                             items(downloads, key = { it.packageName }) { download ->
@@ -107,7 +107,8 @@ internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>, o
                                 HorizontalDivider(color = outline)
                             }
                         }
-                        app != null -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        detail != null -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            val app = detail.app
                             item {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     AsyncImage(app.iconArtwork.url, null, Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)))
@@ -119,8 +120,14 @@ internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>, o
                                     if (download != null && (download.isActive || download.status in setOf(DownloadStatus.COMPLETED,
                                             DownloadStatus.INSTALLING, DownloadStatus.INSTALLED))) {
                                         Text(stringResource(download.status.localized))
-                                    } else if (app.isFree) {
-                                        Button(onClick = { catalog.install(app) }, enabled = !state.busy) { Text(stringResource(R.string.action_install)) }
+                                    } else if (detail.resolved && app.isFree) {
+                                        if (app.versionCode > 0) {
+                                            Button(onClick = { catalog.install(detail) }, enabled = !state.busy) {
+                                                Text(stringResource(R.string.action_install))
+                                            }
+                                        } else {
+                                            Text(stringResource(R.string.omodash_no_install_version), color = muted)
+                                        }
                                     }
                                 }
                             }
