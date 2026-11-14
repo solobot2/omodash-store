@@ -60,13 +60,15 @@ fun GoogleLoginScreen(
     onNavigateTo: (Destination) -> Unit,
     addAccount: Boolean = false,
     viewModel: AuthViewModel = hiltViewModel(),
-    onPageError: () -> Unit = {}
+    onPageError: () -> Unit = {},
+    requireNewSession: Boolean = false
 ) {
     val context = LocalContext.current
     val authState by viewModel.authState.collectAsStateWithLifecycle()
     var progress by remember { mutableFloatStateOf(0f) }
     var isIndeterminate by remember { mutableStateOf(true) }
     var isLoading by remember { mutableStateOf(true) }
+    var submitted by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         AuroraApp.events.authEvent.collect { event ->
@@ -75,6 +77,7 @@ fun GoogleLoginScreen(
                     if (addAccount) {
                         viewModel.addGoogleAuthData(event.email, event.token)
                     } else {
+                        submitted = true
                         viewModel.buildGoogleAuthData(
                             event.email,
                             event.token,
@@ -103,7 +106,8 @@ fun GoogleLoginScreen(
             }
         }
     } else {
-        LaunchedEffect(authState) {
+        LaunchedEffect(authState, submitted) {
+            if (requireNewSession && !submitted) return@LaunchedEffect
             when (authState) {
                 AuthState.SignedIn, AuthState.Valid -> onNavigateTo(
                     Destination.Main(

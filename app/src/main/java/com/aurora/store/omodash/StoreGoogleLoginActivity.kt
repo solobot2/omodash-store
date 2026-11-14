@@ -43,7 +43,8 @@ internal class StoreGoogleLoginActivity : FragmentActivity() {
                                     finish()
                                 } else error.intValue = R.string.failed_to_generate_session
                             },
-                            onPageError = { error.intValue = R.string.omodash_google_sign_in_error }
+                            onPageError = { error.intValue = R.string.omodash_google_sign_in_error },
+                            requireNewSession = true
                         )
                     } else {
                         Text(stringResource(error.intValue), color = MaterialTheme.colorScheme.error,
