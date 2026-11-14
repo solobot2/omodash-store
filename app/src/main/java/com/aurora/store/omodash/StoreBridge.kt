@@ -15,6 +15,7 @@ internal object StoreBridge {
     const val SURFACE = 5
     const val ERROR = 6
     const val INSTALL = 7
+    const val GOOGLE_LOGIN = 8
     const val ACTION_RESULT = "win.solobot.omodash.store.INSTALL_RESULT"
     private const val HOST = "win.solobot.omodash"
     private const val CERT = "810b14da1f68836b92039603d4c99c2122c10d65c6d467ea0c8b2b3b1e13002a"

@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-or-later */
 package com.aurora.store.omodash
 
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -88,7 +89,7 @@ internal class StoreSurfaceService : Service() {
             setViewTreeLifecycleOwner(owner)
             setViewTreeSavedStateRegistryOwner(owner)
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
-            setContent { EmbeddedStore(catalog, theme) }
+            setContent { EmbeddedStore(catalog, theme, ::requestGoogleLogin) }
         }
         val host = SurfaceControlViewHost(window, display, token)
         val death = IBinder.DeathRecipient { handler.post { if (session?.reply?.binder == reply.binder) close() } }
@@ -109,6 +110,17 @@ internal class StoreSurfaceService : Service() {
         val width = data.getInt("width")
         val height = data.getInt("height")
         return if (width in 1..8192 && height in 1..8192) width to height else null
+    }
+
+    private fun requestGoogleLogin() {
+        val current = session ?: return
+        val login = PendingIntent.getActivity(this, 0, Intent(this, StoreGoogleLoginActivity::class.java),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_ONE_SHOT)
+        runCatching {
+            current.reply.send(Message.obtain(null, StoreBridge.GOOGLE_LOGIN, StoreBridge.VERSION, current.generation).apply {
+                data = Bundle().apply { putParcelable("login", login) }
+            })
+        }.onFailure { login.cancel() }
     }
 
     private fun close() {

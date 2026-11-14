@@ -8,4 +8,6 @@
     <string name="omodash_details_error">Could not load app details.</string>
     <string name="omodash_search_prompt">Search for an app above.</string>
     <string name="omodash_no_results">No apps found.</string>
+    <string name="omodash_google_sign_in">Sign in with Google</string>
+    <string name="omodash_google_sign_in_error">Google sign-in could not be opened. Check the connection and try again.</string>
 </resources>

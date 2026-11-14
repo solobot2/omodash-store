@@ -85,6 +85,12 @@ internal class EmbeddedCatalog @Inject constructor(
         }
     }
 
+    fun googleSignedIn() {
+        val previous = state.value.query
+        state.value = State(signedIn = true)
+        if (previous.isNotBlank()) search(previous)
+    }
+
     private fun findApps(query: String): List<App> = webSearch.searchResults(query).streamClusters.values
         .flatMap { it.clusterAppList }.distinctBy { it.packageName }
 

@@ -15,13 +15,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.PendingIntentCompat
 import androidx.core.content.getSystemService
 import com.aurora.Constants
-import com.aurora.store.ComposeActivity
 import com.aurora.store.R
-import com.aurora.store.compose.navigation.Screen
-import com.aurora.store.data.activity.InstallActivity
 import com.aurora.store.data.helper.DownloadHelper
-import com.aurora.store.data.installer.AppInstaller
 import com.aurora.store.data.model.DownloadStatus
+import com.aurora.store.omodash.StoreBridge
 import com.aurora.store.data.receiver.DownloadCancelReceiver
 import com.aurora.store.data.receiver.DownloadRetryReceiver
 import com.aurora.store.data.room.download.Download
@@ -209,21 +206,6 @@ object NotificationUtil {
                 builder.setCategory(Notification.CATEGORY_STATUS)
                 builder.setContentIntent(getContentIntentForDetails(context, download.packageName))
 
-                // Show install action if app cannot be silently installed
-                if (!AppInstaller.canInstallSilently(
-                        context,
-                        download.packageName,
-                        download.targetSdk
-                    )
-                ) {
-                    builder.addAction(
-                        NotificationCompat.Action.Builder(
-                            R.drawable.ic_install,
-                            context.getString(R.string.action_install),
-                            getInstallIntent(context, download)
-                        ).build()
-                    )
-                }
             }
 
             DownloadStatus.DOWNLOADING, DownloadStatus.QUEUED -> {
@@ -594,43 +576,17 @@ object NotificationUtil {
     }
 
     private fun getContentIntentForDetails(context: Context, packageName: String): PendingIntent? {
-        val intent = Intent(context, ComposeActivity::class.java).apply {
-            putExtra(Screen.PARCEL_KEY, Screen.AppDetails(packageName) as android.os.Parcelable)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        return PendingIntentCompat.getActivity(
-            context,
-            packageName.hashCode().absoluteValue,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT,
-            false
-        )
+        return getHostContentIntent(context, packageName.hashCode())
     }
 
     private fun getContentIntentForMain(context: Context, initialTab: Int): PendingIntent? {
-        val intent = Intent(context, ComposeActivity::class.java).apply {
-            putExtra(Screen.PARCEL_KEY, Screen.Main(initialTab) as android.os.Parcelable)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        return PendingIntentCompat.getActivity(
-            context,
-            initialTab,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT,
-            false
-        )
+        return getHostContentIntent(context, initialTab)
     }
 
-    private fun getInstallIntent(context: Context, download: Download): PendingIntent? {
-        val intent = Intent(context, InstallActivity::class.java).apply {
-            putExtra(Constants.PARCEL_DOWNLOAD, download)
-        }
-        return PendingIntentCompat.getActivity(
-            context,
-            download.packageName.hashCode(),
-            intent,
-            PendingIntent.FLAG_CANCEL_CURRENT,
-            false
-        )
+    private fun getHostContentIntent(context: Context, requestCode: Int): PendingIntent? {
+        val pkg = StoreBridge.host(context)?.packageName ?: return null
+        val intent = Intent().setClassName(pkg, "win.solobot.omodash.MainActivity")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        return PendingIntentCompat.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT, false)
     }
 }

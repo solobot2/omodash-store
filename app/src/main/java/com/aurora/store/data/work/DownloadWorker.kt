@@ -575,19 +575,8 @@ class DownloadWorker @AssistedInject constructor(
                 download.progress = 100
                 downloadDao.updateProgress(download.packageName, 100, 0, 0)
 
-                // Silently-installable apps install automatically and get a single
-                // "installed" notification afterwards, so a separate "download complete"
-                // notice is just noise. Only surface completion when the user must act on it
-                // (tap to install).
-                val needsUserAction = !AppInstaller.canInstallSilently(
-                    context,
-                    download.packageName,
-                    download.targetSdk
-                )
-                if (!needsUserAction) {
-                    notificationManager.cancel(download.packageName.hashCode())
-                    return
-                }
+                notificationManager.cancel(download.packageName.hashCode())
+                return
             }
 
             else -> {}

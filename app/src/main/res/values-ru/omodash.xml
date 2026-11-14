@@ -8,4 +8,6 @@
     <string name="omodash_details_error">Не удалось загрузить сведения о приложении.</string>
     <string name="omodash_search_prompt">Введите название приложения в строке поиска.</string>
     <string name="omodash_no_results">Приложения не найдены.</string>
+    <string name="omodash_google_sign_in">Войти через Google</string>
+    <string name="omodash_google_sign_in_error">Не удалось открыть вход Google. Проверьте подключение и повторите попытку.</string>
 </resources>

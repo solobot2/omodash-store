@@ -88,16 +88,12 @@
         tools:targetApi="tiramisu">
 
         <activity android:name=".ComposeActivity" android:exported="false" />
+        <activity android:name=".omodash.StoreGoogleLoginActivity" android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
         <!-- Protected by the launcher's pinned package and signing certificate on each Binder message. -->
         <service android:name=".omodash.StoreSurfaceService" android:exported="true"
             tools:ignore="ExportedService" />
         <receiver android:name=".omodash.OmodashInstallResult" android:exported="false" />
-
-        <!-- Notification Action (Download Complete) -->
-        <activity
-            android:name=".data.activity.InstallActivity"
-            android:exported="false"
-            android:theme="@style/AppTheme.Translucent" />
 
         <activity
             android:name=".data.activity.MicroGInstallerActivity"

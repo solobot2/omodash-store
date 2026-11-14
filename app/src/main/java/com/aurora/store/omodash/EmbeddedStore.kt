@@ -43,7 +43,7 @@ import com.aurora.store.data.model.DownloadStatus
 import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>) {
+internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>, onGoogleLogin: () -> Unit) {
     val settings by theme.collectAsState()
     val state by catalog.state.collectAsState()
     val downloads by catalog.downloads.collectAsState()
@@ -70,7 +70,14 @@ internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>) {
                     state.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
                     if (!state.signedIn) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Button(onClick = catalog::login, enabled = !state.busy) { Text(stringResource(R.string.omodash_anonymous_sign_in)) }
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Button(onClick = catalog::login, enabled = !state.busy) {
+                                    Text(stringResource(R.string.omodash_anonymous_sign_in))
+                                }
+                                Button(onClick = onGoogleLogin, enabled = !state.busy) {
+                                    Text(stringResource(R.string.omodash_google_sign_in))
+                                }
+                            }
                         }
                         return@Column
                     }

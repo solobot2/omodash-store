@@ -5,9 +5,13 @@
 
 package com.aurora.store.compose.ui.accounts
 
-import android.os.Build
+import android.graphics.Bitmap
+import android.net.Uri
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -55,7 +59,8 @@ private const val JS_PROFILE_EMAIL = """
 fun GoogleLoginScreen(
     onNavigateTo: (Destination) -> Unit,
     addAccount: Boolean = false,
-    viewModel: AuthViewModel = hiltViewModel()
+    viewModel: AuthViewModel = hiltViewModel(),
+    onPageError: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val authState by viewModel.authState.collectAsStateWithLifecycle()
@@ -127,9 +132,9 @@ fun GoogleLoginScreen(
             factory = { ctx ->
                 val cookieManager = CookieManager.getInstance()
                 WebView(ctx).apply {
-                    cookieManager.removeAllCookies(null)
-                    cookieManager.acceptThirdPartyCookies(this)
-                    cookieManager.setAcceptThirdPartyCookies(this, true)
+                    var exchanged = false
+                    var active = true
+                    tag = { active = false }
 
                     webChromeClient = object : WebChromeClient() {
                         override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -146,30 +151,59 @@ fun GoogleLoginScreen(
                     }
 
                     webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean =
+                            request.isForMainFrame && !isGoogleLoginUrl(request.url)
+
+                        override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
+                            if (!isGoogleLoginUrl(Uri.parse(url))) {
+                                view.stopLoading()
+                                onPageError()
+                            }
+                        }
+
+                        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                            if (request.isForMainFrame) onPageError()
+                        }
+
+                        override fun onReceivedHttpError(view: WebView, request: WebResourceRequest, error: WebResourceResponse) {
+                            if (request.isForMainFrame) onPageError()
+                        }
+
                         override fun onPageFinished(view: WebView, url: String) {
-                            val cookies = CookieManager.getInstance().getCookie(url) ?: return
+                            if (exchanged || !isGoogleLoginUrl(Uri.parse(url))) return
+                            val cookies = cookieManager.getCookie(url) ?: return
                             val cookieMap = AC2DMUtil.parseCookieString(cookies)
                             val oauthToken = cookieMap[AUTH_TOKEN] ?: return
                             view.evaluateJavascript(JS_PROFILE_EMAIL) { result ->
                                 val email = result.trim('"')
-                                viewModel.buildAuthData(view.context, email, oauthToken)
+                                if (active && !exchanged && '@' in email) {
+                                    exchanged = true
+                                    viewModel.buildAuthData(view.context, email, oauthToken)
+                                }
                             }
                         }
                     }
 
                     settings.apply {
-                        allowContentAccess = true
+                        allowContentAccess = false
+                        allowFileAccess = false
                         domStorageEnabled = true
                         javaScriptEnabled = true
                         cacheMode = WebSettings.LOAD_DEFAULT
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            safeBrowsingEnabled = false
-                        }
                     }
 
-                    loadUrl(EMBEDDED_SETUP_URL)
+                    cookieManager.removeAllCookies { if (active) loadUrl(EMBEDDED_SETUP_URL) }
                 }
+            },
+            onRelease = { view ->
+                (view.tag as? Function0<*>)?.invoke()
+                view.stopLoading()
+                view.destroy()
+                CookieManager.getInstance().removeAllCookies(null)
             }
         )
     }
 }
+
+private fun isGoogleLoginUrl(uri: Uri): Boolean = uri.scheme == "https" &&
+    uri.host == "accounts.google.com" && uri.userInfo == null && uri.port in listOf(-1, 443)

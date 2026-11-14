@@ -8,4 +8,6 @@
     <string name="omodash_details_error">Nie udało się wczytać szczegółów aplikacji.</string>
     <string name="omodash_search_prompt">Wpisz nazwę aplikacji w polu wyszukiwania.</string>
     <string name="omodash_no_results">Nie znaleziono aplikacji.</string>
+    <string name="omodash_google_sign_in">Zaloguj się przez Google</string>
+    <string name="omodash_google_sign_in_error">Nie udało się otworzyć logowania Google. Sprawdź połączenie i spróbuj ponownie.</string>
 </resources>
