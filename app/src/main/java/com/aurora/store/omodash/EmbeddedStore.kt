@@ -64,7 +64,7 @@ internal fun EmbeddedStore(catalog: EmbeddedCatalog, theme: StateFlow<Bundle>, o
         settings.getFloat("fontScale", defaultDensity.fontScale).coerceIn(.5f, 4f))
     CompositionLocalProvider(LocalDensity provides density) {
         MaterialTheme(colorScheme = palette) {
-            Surface(color = background, contentColor = text, modifier = Modifier.fillMaxSize()) {
+            Surface(color = background.copy(alpha = 0.10f), contentColor = text, modifier = Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize().padding(horizontal = 14.dp)) {
                     if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
                     state.error?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(8.dp)) }
